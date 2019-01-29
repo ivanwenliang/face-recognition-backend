@@ -23,10 +23,12 @@ app.get('/', (req, res) => {
     res.send('It is working');
 })
 
+// Check user credentials and route to home page
 app.post('/signIn', (req, res) => {
     db.select('email', 'hash').from('login')
         .where('email', '=', req.body.email)
         .then(data => {
+            // Check hash and given password
             const isValid = bcrypt.compareSync(req.body.password, data[0].hash);
             if (isValid) {
                 return db.select('*').from('users')
@@ -40,17 +42,14 @@ app.post('/signIn', (req, res) => {
             }
         })
         .catch(err => res.status(400).json('Wrong Credentials'))
-    // if (req.body.email === database.users[0].email &&
-    //     req.body.password === database.users[0].password) {
-    //     res.json(database.users[0]);
-    // } else {
-    //     res.status(400).json('error logging in');
-    // }
 })
 
+// Create new user
 app.post('/register', (req, res) => {
     const { email, name, password } = req.body;
+    // Hash password with bcrypt
     const hash = bcrypt.hashSync(password);
+        // Transactions for consistent data
         db.transaction(trx => {
             trx.insert({
                 hash: hash,
@@ -70,20 +69,13 @@ app.post('/register', (req, res) => {
                         res.json(user[0]);
                     })
             })
+            // If success, then commit all changes
             .then(trx.commit)
+            // Else rollback changes
             .catch(trx.rollback)
         })
         .catch(err => res.status(400).json('Unable to register'))
 })
-//     database.users.push({
-//         id: '125',
-//         name: name,
-//         email: email,
-//         entries: 0,
-//         joined: new Date()
-//     })
-//     res.json(database.users[database.users.length-1]);
-// })
 
 app.get('/profile/:id', (req, res) => {
     const { id } = req.params;
@@ -97,41 +89,20 @@ app.get('/profile/:id', (req, res) => {
         })
         .catch(err => res.status(400).json('Error getting user'))
 })
-//     let found = false;
-//     database.users.forEach(user => {
-//         if (user.id === id) {
-//             found = true;
-//             return res.json(user);
-//         }
-//     })
-//     if (!found) {
-//         res.status(400).json('not found');
-//     }
-// })
 
+// Update number of images submitted by each user
 app.put('/image', (req, res) => {
     const { id } = req.body;
     db('users').where('id', '=', id)
-        .increment('entries', 1)
-        .returning('entries')
-        .then(entries => {
-            res.json(entries[0]);
-        })
+    .increment('entries', 1)
+    .returning('entries')
+    .then(entries => {
+        res.json(entries[0]);
+    })
     .catch(err => res.status(400).json('Unable to get entries'))
 })
-//     let found = false;
-//     database.users.forEach(user => {
-//         if (user.id === id) {
-//             found = true;
-//             user.entries++;
-//             return res.json(user.entries);
-//         }
-//     })
-//     if (!found) {
-//         res.status(400).json('not found');
-//     }
-// })
 
+// Check server is running
 app.listen(3000, ()=> {
     console.log('app is running on port 3000');
 })
