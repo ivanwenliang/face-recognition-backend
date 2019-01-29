@@ -40,6 +40,8 @@ app.get('/profile/:id', (req, res) => { profile.handleProfileGet(req, res, db) }
 // Update number of images submitted by each user
 app.put('/image', (req, res) => { image.handleImage(req, res, db) })
 
+app.post('/imageurl', (req, res) => { image.handleApiCall(req, res) })
+
 // Check server is running
 app.listen(3000, ()=> {
     console.log('app is running on port 3000');
